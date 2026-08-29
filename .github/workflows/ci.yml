@@ -5,12 +5,13 @@ on:
     branches:
       - 'feature/**'
       - 'fix/**'
+      - 'main'
   pull_request:
     branches:
       - main
     
 jobs:
-  build-and-test:
+  security-and-test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -21,9 +22,38 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Install dependencies
+      - name: Install dependencies and security tools
         run: | 
+          python -m pip install --upgrade pip
           pip install -r requirements.txt
+          pip install bandit pip-audit
+
+      - name: Run Bandit (Static Application Security Testing)
+        run: |
+          # Scans Python code recursively for common security vulnerabilities
+          bandit -r . -x ./tests
+
+      - name: Run Pip-Audit (Dependency Vulnerability Scanner)
+        run: |
+          # Checks installed packages against known CVE databases
+          pip-audit
+
+  docker-build:
+    needs: security-and-test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
       - name: Test Docker Build (Dry Run)
         run: docker build -t flask-test:latest .
+        
+      - name: Scan Docker image for vulnerabilities
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'flask-test:latest'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          severity: 'CRITICAL,HIGH'
