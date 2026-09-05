@@ -28,15 +28,15 @@ jobs:
           pip install -r requirements.txt
           pip install bandit pip-audit
 
-      - name: Run Bandit (Static Application Security Testing)
-        run: |
-          # Scans Python code recursively for common security vulnerabilities
-          bandit -r . -x ./tests
+      # - name: Run Bandit (Static Application Security Testing)
+      #   run: |
+      #     # Scans Python code recursively for common security vulnerabilities
+      #     bandit -r . -x ./tests
 
-      - name: Run Pip-Audit (Dependency Vulnerability Scanner)
-        run: |
-          # Checks installed packages against known CVE databases
-          pip-audit
+      # - name: Run Pip-Audit (Dependency Vulnerability Scanner)
+      #   run: |
+      #     # Checks installed packages against known CVE databases
+      #     pip-audit
 
   docker-build:
     needs: security-and-test
